@@ -11,4 +11,4 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/Users/vitocianchini/Documents/ACES/NATS_conversion/ACES.Metrics-Handler-main/pvs/timescaledb"
+    path: "/Users/vitocianchini/Documents/ACES/NATS_conversion/ACES.Metrics-Handler-main/pvs/neo4j"

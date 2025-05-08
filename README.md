@@ -110,6 +110,22 @@ curl -X 'GET' \
 ```shell
 kubectl port-forward svc/control-center 9021:9021
 ```
+##### 4.5 Install NATS
+```shell
+cd nats/
+kubectl apply -f.
+```
+##### 4.5 Install prometheus-NATS adapter
+```shell
+cd nats-adapter/
+kubectl apply -f.
+```
+##### 4.6 Port Forward NATS
+Port Forward NATS
+```shell
+kubectl port-forward svc/nats-server 4222:4222
+```
+
 #### 5. Metrics Consumer
 0. `How to build Metrics consumer dockerfile` see documentation [here](metrics_consumer/README.md)
 1. `cd config/k8s/aces/metrics_consumer`

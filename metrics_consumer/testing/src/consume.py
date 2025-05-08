@@ -1,11 +1,11 @@
-import asyncio
+from Kafka.client import KafkaObject
 from timescaledb.client import AcesMetrics
 from graph_base.demand import DemandGraph
-from NATS.client import NatsMetricsConsumer
-from settings import NATS_HOST, NATS_PORT, TSCALE_HOST, TSCALE_USER, TSCALE_DB, \
+
+from settings import KAFKA_HOST, KAFKA_PORT, TSCALE_HOST, TSCALE_USER, TSCALE_DB, \
     TSCALE_PASS, TARGET_TOPICS, NEO4J_HOST, NEO4J_USER, NEO4J_PASS, GROUP_ID
 
-async def main():
+if __name__ == "__main__":
     this_obj = DemandGraph(
         neo4j_host=NEO4J_HOST,
         neo4j_user=NEO4J_USER,
@@ -17,15 +17,12 @@ async def main():
         database=TSCALE_DB,
         password=TSCALE_PASS
     )
-    nats_obj = NatsMetricsConsumer(
-        nats_host=NATS_HOST,
-        nats_port=NATS_PORT
+    kafka_obj = KafkaObject(
+        bootstrap_servers=f'{KAFKA_HOST}:{KAFKA_PORT}'
     )
-    await nats_obj.consume(
+    kafka_obj.consumer(
         TARGET_TOPICS,
+        group_id=GROUP_ID,
         mem_obj=this_obj,
         aces_metrics=aces_metrics
     )
-
-if __name__ == "__main__":
-    asyncio.run(main())

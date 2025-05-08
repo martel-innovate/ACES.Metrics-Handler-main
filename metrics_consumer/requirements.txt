@@ -1,0 +1,4 @@
+nats-py>=2.10.0
+confluent-kafka>=2.8.0
+neo4j>=5.27.0
+psycopg2-binary>=2.9.10

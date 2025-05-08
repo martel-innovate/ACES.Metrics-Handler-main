@@ -1,7 +1,8 @@
-import asyncio
-import nats
-from nats.errors import TimeoutError
-from .utils import map_nats_to_kafka_format
+import sys
+import json
+import logging
+import confluent_kafka
+from confluent_kafka import KafkaError, KafkaException
 
 prefix = "kube_node"
 easy_node_metrics = [
@@ -11,43 +12,40 @@ easy_node_metrics = [
 ]
 
 
-
-class NatsMetricsConsumer():
-    def __init__(self, nats_host="localhost", nats_port="4222", nats_subject="metrics.*"):
-        self.nats_url = f"{nats_host}:{nats_port}"
-        self.nats_subject=nats_subject
-    async def connect(self):
-        self.nc = await nats.connect(self.nats_url)
-    async def subscribe(self):
-        self.sub = await self.nc.subscribe(self.nats_subject)
-    
-    async def consume(self,target_topics,mem_obj,aces_metrics):
-        # connect to NATS server
-        await self.connect()
-        # subscribe to NATS subject
-        self.nats_subject = target_topics
-        await self.subscribe()
-        print(f"Subscribed to {self.nats_subject}")
-
-        while True:
-            try:
-                msg = await self.sub.next_msg(timeout=10)
-                print("Received:", msg)
-                # Convert the NATS message to Kafka format  
-                kafka_message = map_nats_to_kafka_format(msg.data.decode())
-                print("Converted to Kafka format:", kafka_message)
-                self.handler(kafka_message, mem_obj, aces_metrics)
-            except TimeoutError:
-                print("No message received in the last 10 seconds, continuing...")
-                continue
-            except Exception as e:
-                print(f"Error processing message: {e}")
-                continue
-    async def close(self):
-        await self.nc.drain()
+class KafkaObject(object):
+    def __init__(
+            self,
+            bootstrap_servers,
+            buffering_max_messages=2000000,
+            session_timeout=1740000,
+            max_pol_interval_ms=1750000,
+            heartbeat_interval_ms=30000,
+            connections_max_handle_ms=54000000,
+            off_set_reset='latest'
+    ):
+        self.bootstrap_servers = bootstrap_servers
+        self.producer_conf = {
+            'bootstrap.servers': self.bootstrap_servers,
+            'queue.buffering.max.messages': buffering_max_messages
+        }
+        self.consumer_conf = {
+            'bootstrap.servers': self.bootstrap_servers,
+            'session.timeout.ms': session_timeout,
+            'heartbeat.interval.ms': heartbeat_interval_ms,
+            'connections.max.idle.ms': connections_max_handle_ms,
+            'max.poll.interval.ms': max_pol_interval_ms,
+            'fetch.wait.max.ms': 1000,
+            'enable.auto.commit': 'true',
+            'socket.keepalive.enable': 'true',
+            'default.topic.config': {
+                'auto.offset.reset': off_set_reset
+            }
+        }
+        logging.basicConfig(level=logging.DEBUG)
+        self.logger = logging.getLogger('kafka-object')
 
     def handler(self, msg, mem_obj, aces_metrics):
-        json_result = msg
+        json_result = json.loads(msg.value().decode())
         # dict_keys(['labels', 'name', 'timestamp', 'value'])
         result = json_result["labels"]
         metric_name = result["__name__"]
@@ -258,5 +256,51 @@ class NatsMetricsConsumer():
                         metric=formatted_metric_name
                     )
         else:
-            pass   
+            pass
 
+    def producer(
+            self,
+            msg,
+            topic
+    ):
+        messages_overflow = 0
+        producer = confluent_kafka.Producer(**self.producer_conf)
+        try:
+            producer.produce(topic, value=json.dumps(msg))
+        except BufferError as e:
+            messages_overflow += 1
+
+        # checking for overflow
+        self.logger.error(f'BufferErrors: {messages_overflow}')
+        producer.flush()
+
+    def consumer(
+            self,
+            list_of_topics,
+            group_id,
+            mem_obj, aces_metrics
+    ):
+        consumer_config = self.consumer_conf
+        consumer_config['group.id'] = group_id
+        consumer = confluent_kafka.Consumer(**consumer_config)
+        consumer.subscribe(list_of_topics)
+        try:
+            while True:
+                msg = consumer.poll()
+                if msg is None:
+                    continue
+
+                if msg.error():
+                    if msg.error().code() == KafkaError._PARTITION_EOF:
+                        # End of partition event
+                        sys.stderr.write(
+                            '%% %s [%d] reached end at offset %d\n' % (msg.topic(), msg.partition(), msg.offset()))
+                    elif msg.error():
+                        # Error
+                        raise KafkaException(msg.error())
+                else:
+                    self.handler(msg, mem_obj, aces_metrics)
+        except Exception as ex:
+            self.logger.error(ex)
+        finally:
+            consumer.close()
