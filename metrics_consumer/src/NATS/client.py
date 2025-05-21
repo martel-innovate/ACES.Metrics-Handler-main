@@ -50,10 +50,10 @@ class NatsMetricsConsumer():
                 self.logger.debug("Converted to Kafka format: %s", kafka_message)
                 self.handler(kafka_message, mem_obj, aces_metrics)
             except TimeoutError:
-                print("No message received in the last 10 seconds, continuing...")
+                self.logger.info("No message received in the last 10 seconds, continuing...")
                 continue
             except Exception as e:
-                print(f"Error processing message: {e}")
+                self.logger.error("Error processing message: %s", e)
                 continue
     async def close(self):
         await self.nc.drain()

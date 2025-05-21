@@ -10,7 +10,7 @@ WORKDIR /metrics_consumer
 COPY  metrics_consumer/pyproject.toml  metrics_consumer/poetry.lock ./
 RUN poetry lock && poetry install --no-root && rm -rf $POETRY_CACHE_DIR
 
-COPY metrics_consumer/src/Kafka ./Kafka
+#COPY metrics_consumer/src/Kafka ./Kafka
 COPY metrics_consumer/src/NATS ./NATS
 COPY storage/graph_base ./graph_base
 COPY storage/timescaledb ./timescaledb
