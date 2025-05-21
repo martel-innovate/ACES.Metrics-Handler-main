@@ -2,6 +2,15 @@ import asyncio
 import nats
 from nats.errors import TimeoutError
 from .utils import map_nats_to_kafka_format
+from datetime import datetime, timezone
+import logging
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 prefix = "kube_node"
 easy_node_metrics = [
@@ -16,6 +25,7 @@ class NatsMetricsConsumer():
     def __init__(self, nats_host="localhost", nats_port="4222", nats_subject="metrics.*"):
         self.nats_url = f"{nats_host}:{nats_port}"
         self.nats_subject=nats_subject
+        self.logger = logging.getLogger(__name__)
     async def connect(self):
         self.nc = await nats.connect(self.nats_url)
     async def subscribe(self):
@@ -32,10 +42,12 @@ class NatsMetricsConsumer():
         while True:
             try:
                 msg = await self.sub.next_msg(timeout=10)
-                print("Received:", msg)
+                #print("Received:", msg)
+                self.logger.debug("Received: %s", msg)
                 # Convert the NATS message to Kafka format  
                 kafka_message = map_nats_to_kafka_format(msg.data.decode())
-                print("Converted to Kafka format:", kafka_message)
+                #print("Converted to Kafka format:", kafka_message)
+                self.logger.debug("Converted to Kafka format: %s", kafka_message)
                 self.handler(kafka_message, mem_obj, aces_metrics)
             except TimeoutError:
                 print("No message received in the last 10 seconds, continuing...")
@@ -49,6 +61,13 @@ class NatsMetricsConsumer():
     def handler(self, msg, mem_obj, aces_metrics):
         json_result = msg
         # dict_keys(['labels', 'name', 'timestamp', 'value'])
+        if 'timestamp' in json_result:
+            timestamp = json_result['timestamp']
+            if len(str(timestamp)) == 13:  # milliseconds timestamp
+                timestamp = int(timestamp) // 1000
+            # Convert Unix timestamp to datetime with timezone
+            json_result['timestamp'] = datetime.fromtimestamp(timestamp, tz=timezone.utc)
+
         result = json_result["labels"]
         metric_name = result["__name__"]
         if metric_name.startswith("container"):

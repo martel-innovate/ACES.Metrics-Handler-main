@@ -4,6 +4,7 @@ import os
 KAFKA_HOST = os.environ.get("KAFKA_HOST", "broker")
 KAFKA_PORT = os.environ.get("KAFKA_PORT", 29092)
 GROUP_ID = os.environ.get("GROUP_ID", "PAUSE")
+#TARGET_TOPICS = ["metrics"]
 TARGET_TOPICS = "metrics.*"
 
 # NATS SETTINGS

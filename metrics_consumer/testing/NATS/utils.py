@@ -35,7 +35,7 @@ def map_nats_to_kafka_format(nats_message: str) -> dict:
     
     # Assume only one sample per message
     sample = parsed_message['samples'][0]
-    value = str(sample.get('value', 'N/A'))  # Cast value to string if needed
+    value = sample.get('value', None) 
     timestamp = sample['timestamp']
 
     # Build the kafka-style message
