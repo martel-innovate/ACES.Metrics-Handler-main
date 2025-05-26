@@ -26,6 +26,8 @@ class GraphBase(object):
         self.driver = GraphDatabase.driver(
             f"bolt://{neo4j_host}", auth=(neo4j_user, neo4j_pass)
         )
+        self.driver.verify_connectivity()
+        
         if db_:
             self.session = self.driver.session(database=db_)
         else:

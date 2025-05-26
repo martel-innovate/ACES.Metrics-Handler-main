@@ -21,7 +21,8 @@ easy_node_metrics = [
     f"{prefix}_status_allocatable",
 ]
 
-
+valid_values= lambda x: x.startswith("kube_node") or x.startswith("kube_pod") or x.startswith("aces_pod") or x.startswith("kubelet")\
+                       or  x.startswith("container")
 
 class NatsMetricsConsumer():
     def __init__(self, nats_host="localhost", nats_port="4222", nats_subject="metrics.*"):
@@ -48,6 +49,11 @@ class NatsMetricsConsumer():
                 # Convert the NATS message to Kafka format  
                 kafka_message = map_nats_to_kafka_format(msg.data.decode())
                 self.logger.debug("Converted to Kafka format: %s", kafka_message)
+                ## DEBUG
+                if not(valid_values(kafka_message["labels"]["__name__"])):
+                   continue
+                #### 
+                
                
                 result = self.handler(kafka_message, mem_obj, aces_metrics)
                 if not result:
@@ -77,6 +83,12 @@ class NatsMetricsConsumer():
         metric_name = result["__name__"]
         if metric_name.startswith("container"):
             if "pod" in result.keys():
+                '''
+                # Create node first
+                node_query = mem_obj.create_k8s_node("node1")
+                mem_obj.bolt_transaction(node_query)
+                '''
+                # Then create pod and metrics
                 query = mem_obj.insert_pod_metric(
                     node_id="node1",
                     pod_id=result["pod"],
@@ -282,5 +294,5 @@ class NatsMetricsConsumer():
                         metric=formatted_metric_name
                     )
         else:
-            pass   
+            pass
 

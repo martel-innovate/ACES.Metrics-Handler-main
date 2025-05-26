@@ -119,6 +119,8 @@ class AcesMetrics(TimeScaleDB):
     ):
         is_valid_value = self.is_valid_number(value)
         if is_valid_value:
+            query=f'INSERT INTO {table_name} ({time}, {metric},{value}) VALUES (%s, %s, %s);'
+            print(query)
             self.cursor.execute(
                 f'INSERT INTO {table_name} (time, metric,value) VALUES (%s, %s, %s);',
                 (time, metric, value)
