@@ -49,7 +49,7 @@ class NatsMetricsConsumer():
                 # Convert the NATS message to Kafka format  
                 kafka_message = map_nats_to_kafka_format(msg.data.decode())
                 self.logger.debug("Converted to Kafka format: %s", kafka_message)
-                ## DEBUG
+                ##
                 if not(valid_values(kafka_message["labels"]["__name__"])):
                    continue
                 #### 

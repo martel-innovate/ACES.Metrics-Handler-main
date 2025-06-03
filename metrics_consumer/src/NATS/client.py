@@ -19,7 +19,8 @@ easy_node_metrics = [
     f"{prefix}_status_allocatable",
 ]
 
-
+valid_values= lambda x: x.startswith("kube_node") or x.startswith("kube_pod") or x.startswith("aces_pod") or x.startswith("kubelet")\
+                       or  x.startswith("container")
 
 class NatsMetricsConsumer():
     def __init__(self, nats_host="localhost", nats_port="4222", nats_subject="metrics.*"):
@@ -48,7 +49,16 @@ class NatsMetricsConsumer():
                 kafka_message = map_nats_to_kafka_format(msg.data.decode())
                 #print("Converted to Kafka format:", kafka_message)
                 self.logger.debug("Converted to Kafka format: %s", kafka_message)
-                self.handler(kafka_message, mem_obj, aces_metrics)
+                
+                if not(valid_values(kafka_message["labels"]["__name__"])):
+                   continue
+                 
+                
+               
+                result = self.handler(kafka_message, mem_obj, aces_metrics)
+                if not result:
+                    #raise ValueError("Handler returned False or None")
+                    pass
             except TimeoutError:
                 self.logger.info("No message received in the last 10 seconds, continuing...")
                 continue
