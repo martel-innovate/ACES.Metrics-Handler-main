@@ -96,31 +96,22 @@ curl -X 'GET' \
 
 #### 4. Pull-push Metrics Pipeline
 `cd config/k8s/external/pull-push-pipeline`
-##### 4.1 Deploy Confluent Kafka
-1. `cd kafka`
-2. `kubectl apply -f .`
-##### 4.2 Deploy Prometheus
+
+##### 4.1 Deploy Prometheus
 1. `cd prometheus`
 2. `bash setup.sh`
-##### 4.3 Deploy Metrics Scraper
-1. `cd prom-adapter`
-2. `kubectl apply -f .`
 
-##### 4.4 Port Forward Control Center
-```shell
-kubectl port-forward svc/control-center 9021:9021
-```
-##### 4.5 Install NATS
+##### 4.2 Install NATS
 ```shell
 cd nats/
 kubectl apply -f.
 ```
-##### 4.5 Install prometheus-NATS adapter
+##### 4.3 Install prometheus-NATS adapter
 ```shell
 cd nats-adapter/
 kubectl apply -f.
 ```
-##### 4.6 Port Forward NATS
+##### 4.4 Port Forward NATS
 Port Forward NATS
 ```shell
 kubectl port-forward svc/nats-server 4222:4222
