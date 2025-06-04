@@ -43,7 +43,7 @@ spec:
             - name: NATS_PORT
               value: "4222"
 
-          image: vcianchini/metrics_consumer:v0.3
+          image: vcianchini/metrics_consumer:v0.4
           resources:
             requests:
               memory: "128Mi"

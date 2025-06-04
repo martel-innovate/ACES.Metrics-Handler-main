@@ -69,7 +69,8 @@ bash setup.sh
 ##### 2.2 Install TimescaleDB
 ```shell
 cd timescaledb
-kubectl apply -f .
+kubectl apply -f pvc.yaml
+kubectl apply -f deployment.yaml
 ```
 ##### 2.3 Port Forward Storage Components
 ###### 2.3.1 Neo4j
@@ -77,11 +78,13 @@ kubectl apply -f .
 kubectl port-forward svc/neo4j 7474:7474
 ```
 ###### 2.3.2 Timescaledb
+
 ```shell
 kubectl port-forward svc/timescaledb 5432:5432
 cd storage/timescaledb
 python init_table.py
 ```
+note: you need to create a virtual environment with psycopg2 and activate the virtual environment before running the script
 #### 3. Metrics Catalogue
 0. `How to build Metrics catalogue dockerfile` see documentation [here](metrics_catalogue/README.md)
 2. `cd config/k8s/aces/metrics_catalogue`
