@@ -4,7 +4,7 @@ metadata:
   labels:
     app: timescaledb
   name: timescaledb
-  namespace: default
+  #namespace: default
 spec:
   accessModes:
     - ReadWriteOnce

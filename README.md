@@ -69,7 +69,8 @@ bash setup.sh
 ##### 2.2 Install TimescaleDB
 ```shell
 cd timescaledb
-kubectl apply -f .
+kubectl apply -f pvc.yaml
+kubectl apply -f deployment.yaml
 ```
 ##### 2.3 Port Forward Storage Components
 ###### 2.3.1 Neo4j
@@ -77,11 +78,14 @@ kubectl apply -f .
 kubectl port-forward svc/neo4j 7474:7474
 ```
 ###### 2.3.2 Timescaledb
+
 ```shell
 kubectl port-forward svc/timescaledb 5432:5432
 cd storage/timescaledb
 python init_table.py
 ```
+note: you need to create a virtual environment with psycopg2 and activate the virtual environment before running the script
+
 #### 3. Metrics Catalogue
 0. `How to build Metrics catalogue dockerfile` see documentation [here](metrics_catalogue/README.md)
 2. `cd config/k8s/aces/metrics_catalogue`
@@ -96,20 +100,27 @@ curl -X 'GET' \
 
 #### 4. Pull-push Metrics Pipeline
 `cd config/k8s/external/pull-push-pipeline`
-##### 4.1 Deploy Confluent Kafka
-1. `cd kafka`
-2. `kubectl apply -f .`
-##### 4.2 Deploy Prometheus
-1. `cd prometheus`
-2. `bash setup.sh`
-##### 4.3 Deploy Metrics Scraper
-1. `cd prom-adapter`
-2. `kubectl apply -f .`
 
-##### 4.4 Port Forward Control Center
+##### 4.1 Deploy Prometheus
+1. `cd prometheus`
+2. For local deployment run `bash setup.sh`. For HIRO AWS testbed run `kubectl apply -f prom-chart.yaml`.
+
+##### 4.2 Install NATS
 ```shell
-kubectl port-forward svc/control-center 9021:9021
+cd nats/
+kubectl apply -f.
 ```
+##### 4.3 Install prometheus-NATS adapter
+```shell
+cd nats-adapter/
+kubectl apply -f.
+```
+##### 4.4 Port Forward NATS
+Port Forward NATS
+```shell
+kubectl port-forward svc/nats-server 4222:4222
+```
+
 #### 5. Metrics Consumer
 0. `How to build Metrics consumer dockerfile` see documentation [here](metrics_consumer/README.md)
 1. `cd config/k8s/aces/metrics_consumer`

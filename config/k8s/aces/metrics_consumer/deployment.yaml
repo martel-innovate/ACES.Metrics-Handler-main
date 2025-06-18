@@ -5,7 +5,7 @@ metadata:
     app: metrics-consumer
   name: metrics-consumer
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: metrics-consumer
@@ -38,7 +38,12 @@ spec:
               value: neo4j
             - name: NEO4J_PASS
               value: neo4j290292
-          image: pkapsalismartel/metrics_consumer:v0.15
+            - name: NATS_HOST
+              value: nats-server
+            - name: NATS_PORT
+              value: "4222"
+
+          image: vcianchini/metrics_consumer:v0.4
           resources:
             requests:
               memory: "128Mi"

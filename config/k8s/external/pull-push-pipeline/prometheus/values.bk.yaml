@@ -1,16 +1,9 @@
 server:
   remoteWrite:
-  - url: "http://prometheus-nats-adapter:5000/receive"
-  #- url: "http://prometheus-kafka-adapter:8080/receive"
+  - url: "http://prometheus-kafka-adapter:8080/receive"
 prometheus-node-exporter:
   hostRootFsMount:
     enabled: false
-persistence:
-  enabled: true
-  #storageClass: "hostpath"
-  accessModes:
-    - ReadWriteOnce
-  size: 10Gi
 kubeScheduler:
   enabled: true
 serverFiles:
