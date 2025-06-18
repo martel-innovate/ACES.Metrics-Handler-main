@@ -85,6 +85,7 @@ cd storage/timescaledb
 python init_table.py
 ```
 note: you need to create a virtual environment with psycopg2 and activate the virtual environment before running the script
+
 #### 3. Metrics Catalogue
 0. `How to build Metrics catalogue dockerfile` see documentation [here](metrics_catalogue/README.md)
 2. `cd config/k8s/aces/metrics_catalogue`
@@ -102,7 +103,7 @@ curl -X 'GET' \
 
 ##### 4.1 Deploy Prometheus
 1. `cd prometheus`
-2. `bash setup.sh`
+2. For local deployment run `bash setup.sh`. For HIRO AWS testbed run `kubectl apply -f prom-chart.yaml`.
 
 ##### 4.2 Install NATS
 ```shell
