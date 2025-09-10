@@ -39,7 +39,7 @@ spec:
             - name: NEO4J_PASS
               value: neo4j290292
             - name: NATS_HOST
-              value: nats-server
+              value: nats-server.ul.svc.cluster.local
             - name: NATS_PORT
               value: "4222"
 
